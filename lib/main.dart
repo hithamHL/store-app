@@ -15,7 +15,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: appTheme,
-      home: const ProductsScreen(),
+      home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: const ProductsScreen()),
     );
   }
 }
