@@ -42,7 +42,7 @@ TextTheme _buildShrineTextTheme(TextTheme base) {
     bodySmall: base.bodySmall!.copyWith(
       fontFamily: "Montserrat-Arabic-Regular",
       color: Colors.black,
-      fontSize: 12
+      fontSize: 14
 
     ),
     titleMedium: base.titleMedium!.copyWith(
@@ -55,7 +55,11 @@ TextTheme _buildShrineTextTheme(TextTheme base) {
       color: Colors.black,
       fontSize: 12.0,
     ),
-
+    bodyMedium: base.bodyMedium!.copyWith(
+      fontFamily: "Montserrat-Arabic-Medium",
+      color: Colors.green,
+      fontSize: 12.0,
+    ),
 
     bodyLarge: base.bodyLarge!.copyWith(
       fontWeight: FontWeight.w500,

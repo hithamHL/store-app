@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:store_app/model/product_model.dart';
+import 'package:store_app/ui/add_product.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({Key? key}) : super(key: key);
@@ -15,6 +20,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
     {"id": "تصنيف 3", "name": "assets/images/catigory_3.png"},
   ];
   int selectedIndex = 0;
+  List<ProductModel> productsList = [];
+
+
+  getAllProducts()async{
+    productsList = await loadUserModelsFromPrefs();
+  }
+
+  @override
+  void initState() {
+    getAllProducts();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,23 +51,23 @@ class _ProductsScreenState extends State<ProductsScreen> {
               width: 45,
               height: 45,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const AddProduct()));
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor:Theme.of(context).colorScheme.onSecondary ,
+                  foregroundColor: Theme.of(context).colorScheme.onSecondary,
                   shadowColor: Colors.transparent,
                   padding: const EdgeInsets.all(10.0),
                   // Adjust padding as needed
-                  side: BorderSide(
-                      color: Colors.grey,
-                      width: 1
-                  ),
+                  side: BorderSide(color: Colors.grey, width: 1),
                   shape: RoundedRectangleBorder(
                     borderRadius:
                         BorderRadius.circular(16.0), // Adjust radius as needed
                   ),
                 ),
-                child:  const Icon(
+                child: const Icon(
                   Icons.add,
                   color: Colors.black,
                 ),
@@ -115,11 +131,34 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-                itemCount: catigory.length,
-                itemBuilder: (context, index) {
-                  return productsSection();
-                }),
+            child: productsList.length > 0 ? ListView.builder(
+              itemCount: productsList.length,
+              itemBuilder: (context, index) {
+                return productsSection(productsList[index]);
+              },
+            ): Center(child: Text('لا يوجد منتجات ')),
+
+            // FutureBuilder<List<ProductModel>>(
+            //   future: loadUserModelsFromPrefs(),
+            //   builder: (context, snapshot) {
+            //     if (snapshot.connectionState == ConnectionState.waiting) {
+            //       return Center(child: CircularProgressIndicator());
+            //     } else if (snapshot.hasError) {
+            //       print('Error: ${snapshot.error}');
+            //       return Center(child: Text('Error: ${snapshot.error}'));
+            //     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            //       return Center(child: Text('لا يوجد منتجات '));
+            //     } else {
+            //       productsList= snapshot.data!;
+            //       return ListView.builder(
+            //         itemCount: productsList.length,
+            //         itemBuilder: (context, index) {
+            //           return productsSection(productsList[index]);
+            //         },
+            //       );
+            //     }
+            //   },
+            // ),
           ),
         ],
       ),
@@ -129,9 +168,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
   void _selectItem(int index) {
     setState(() {
       selectedIndex = index;
+      if (index == 0) {
+        _changeList(" ");
+      } else if (index == 1) {
+        _changeList("تصنيف 1");
+      } else if (index == 2) {
+        _changeList("تصنيف 2");
+      } else if (index == 3) {
+        _changeList("تصنيف 3");
+      }
     });
   }
-///this widget for catigory section
+
+  ///this widget for catigory section
   Widget getCatagoryItem(name, image, index) {
     return Padding(
       padding: const EdgeInsets.all(6.0),
@@ -183,36 +232,82 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
   }
 
-  Widget productsSection(){
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          Image.asset("assets/images/catigory_1.png"),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("هذا النص ",style: Theme.of(context).textTheme.titleSmall,),
-              Row(
-                children: [
-                  Text("120",style: Theme.of(context).textTheme.bodyText1,),
-                  Text("دولار",style: Theme.of(context).textTheme.bodySmall,),
-                ],
-              ),
-
-              Container(
-                  padding: EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius:
-                    BorderRadius.circular(8), // Set the border radius
-                  ),
-                  child: Text("المتجر",style: TextStyle(color: Colors.black45,fontSize: 12),))
-            ],
-          )
-        ],
+  Widget productsSection(ProductModel productModel) {
+    return Container(
+      height: 100,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Image.file(
+              productModel.imageList[0],
+              width: 70,
+              height: 100,
+              fit: BoxFit.fill,
+            ),
+            SizedBox(
+              width: 8,
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  productModel.productName,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                Row(
+                  children: [
+                    Text(
+                      productModel.productPrice,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(
+                      "دولار",
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ],
+                ),
+                Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius:
+                          BorderRadius.circular(8), // Set the border radius
+                    ),
+                    child: Text(
+                      productModel.productStore,
+                      style: TextStyle(color: Colors.black45, fontSize: 12),
+                    ))
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
 
+  Future<List<ProductModel>> loadUserModelsFromPrefs() async {
+    print("########");
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final productJson = prefs.getString('product');
+    if (productJson != null) {
+      final productList = jsonDecode(productJson) as List<dynamic>;
+      print("########${productList.length}");
+      return productList.map((productMap) {
+        return ProductModel.fromJson(productMap);
+      }).toList();
+    }
+    return [];
+  }
+
+  _changeList(catagory) {
+    productsList = productsList.where((product) {
+      return product.productCatagory == catigory;
+    }).toList();
+    print(  productsList.length);
+
+  }
 }
